@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="root">
+      <div>{{name}}</div>
+      <div>{{age}}</div>
+    </div>
+    <script>
+      const person = {
+        name: "hui",
+        age: 22,
+      };
+      // 1. 获取模板
+      const templateNode = document.getElementById("root");
+      const newNode = templateNode.cloneNode(true);
+
+      // 2.编写函数替换模板中的 占位字符串
+      function compiler(template, data) {
+        const childs = template.childNodes;
+
+        // 对 DOM 进行深拷贝，以保留模板
+        for (let i = 0; i < childs.length; i++) {
+          if (childs[i].nodeType === 3) {
+            // 文本类型的节点，对文本进行替换
+            const r = /\{\{(.+?)\}\}/g; // 声明正则表达式， 其中 ？ 表示 惰性匹配
+            let txt = childs[i].nodeValue;
+            txt = txt.replace(r, (_, g) => {
+              /**
+               *  正则表达式中，第一个参数表示匹配到的字符串
+               *  第二个参数开始表示 匹配到的第 n 组
+               * 会使用回调函数的返回值替换匹配到的值
+               */
+              let key = g.trim();
+              let value = data[key];
+              return value;
+            });
+            childs[i].nodeValue = txt;
+          } else if (childs[i].nodeType === 1) {
+            // DOM 类型节点，进行递归
+            compiler(childs[i], person);
+          }
+        }
+      }
+
+      compiler(newNode, person);
+
+      // 对 页面中的 DOM 进行替换
+      root.parentNode.replaceChild(newNode, root);
+    </script>
+  </body>
+</html>
