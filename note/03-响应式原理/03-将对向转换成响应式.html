@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      let peroson = {
+        name: "hui",
+        age: "22",
+      };
+
+      function defineReactive(target, key, value, enumerable) {
+        Object.defineProperty(target, key, {
+          configurable: true,
+          enumerable: !!enumerable,
+          get() {
+            return value;
+          },
+          set(val) {
+            value = val;
+          },
+        });
+      }
+
+      // 将对象转换成响应式
+      const keys = Object.keys(peroson);
+      keys.forEach((item) => {
+        defineReactive(peroson, item, peroson[item], true);
+      });
+    </script>
+  </body>
+</html>

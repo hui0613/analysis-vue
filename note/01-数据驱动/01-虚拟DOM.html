@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="root">
+      <div>12312</div>
+      <div>name</div>
+    </div>
+    <script>
+      class VNode {
+        constructor(tag, data, value, type) {
+          this.tag = tag && tag.toLowerCase();
+          this.data = data;
+          this.value = value;
+          this.type = type;
+          this.children = [];
+        }
+        appendChild(vnode) {
+          this.children.push(vnode);
+        }
+      }
+
+      function getVNode(node) {
+        let nodeType = node.nodeType,
+          _vnode = null;
+
+        if (nodeType === 1) {
+          // 元素节点
+          let nodeName = node.nodeName,
+            attrs = node.attributes,
+            _attrObj = {};
+          for (let i = 0; i < attrs.length; i++) {
+            //获取属性节点转换对象
+            _attrObj[attrs[i].nodeName] = attrs[i].nodeValue;
+          }
+          _vnode = new VNode(nodeName, _attrObj, undefined, nodeType);
+
+          // 考虑 node 是否存在子元素
+          let childNodes = node.childNodes;
+          for (let i = 0; i < childNodes.length; i++) {
+            _vnode.appendChild(getVNode(childNodes[i])); // 递归
+          }
+        } else if (nodeType === 3) {
+          _vnode = new VNode(undefined, undefined, node.nodeValue, nodeType);
+        }
+        return _vnode;
+      }
+
+      // 生成真实 DOM
+      function parseNode(vnode) {
+        let nodeType = vnode.type;
+        let _node = null;
+        if (nodeType === 3) {
+          return document.createTextNode(vnode.value);
+        } else if (nodeType === 1) {
+          _node = document.createElement(vnode.tag);
+
+          let data = vnode.data;
+          Object.keys(data).forEach((key) => {
+            let attrName = key;
+            let attrValue = data[key];
+
+            _node.setAttribute(attrName, attrValue);
+          });
+          let children = vnode.children;
+          children.forEach((child) => {
+            _node.appendChild(parseNode(child));
+          });
+        }
+        return _node;
+      }
+      let root = document.querySelector("#root");
+
+      let vnode = getVNode(root);
+
+      console.log(vnode);
+      let dom = parseNode(vnode);
+
+      console.log(dom);
+    </script>
+  </body>
+</html>

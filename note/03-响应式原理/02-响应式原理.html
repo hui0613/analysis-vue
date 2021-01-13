@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      let person = {};
+
+      person.name = "hui";
+
+      Object.defineProperty(person, "age", {
+        configurable: true,
+        enumerable: true,
+        value: "22",
+      });
+
+      // get / set
+      // 要实现响应式，就需要在读取值和设置值时作一些操作
+
+      let _gender = "";
+      Object.defineProperty(person, "gender", {
+        configurable: true,
+        enumerable: true,
+        get() {
+          // 使用 person.gender 来访问数据，就会调用 get 方法 （getter， 读取器）
+          return _gender;
+        },
+        set(val) {
+          _gender = val;
+        },
+      });
+
+      // 如果 同时使用 get 和 set， 需要使用一个中间变量来存储属性真实的值
+      // 但是这样的操作会使的 _gender 暴露在全局作用域中
+      // 在 Vue 中使用 defineReactive(target, key, value, enumerable)
+
+      console.log(person);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="root">
+      <div>{{name}}</div>
+      <div>{{age}}</div>
+    </div>
+    <script>
+      class VNode {
+        constructor(tag, data, value, type) {
+          this.tag = tag && tag.toLowerCase();
+          this.data = data;
+          this.value = value;
+          this.type = type;
+          this.children = [];
+        }
+        appendChild(vnode) {
+          this.children.push(vnode);
+        }
+      }
+
+      // 生成 虚拟 DOM
+      function getVNode(node) {
+        let nodeType = node.nodeType,
+          _vnode = null;
+
+        if (nodeType === 1) {
+          // 元素节点
+          let nodeName = node.nodeName,
+            attrs = node.attributes,
+            _attrObj = {};
+          for (let i = 0; i < attrs.length; i++) {
+            //获取属性节点转换对象
+            _attrObj[attrs[i].nodeName] = attrs[i].nodeValue;
+          }
+          _vnode = new VNode(nodeName, _attrObj, undefined, nodeType);
+
+          // 考虑 node 是否存在子元素
+          let childNodes = node.childNodes;
+          for (let i = 0; i < childNodes.length; i++) {
+            _vnode.appendChild(getVNode(childNodes[i])); // 递归
+          }
+        } else if (nodeType === 3) {
+          _vnode = new VNode(undefined, undefined, node.nodeValue, nodeType);
+        }
+        return _vnode;
+      }
+
+      function JGVue(options) {
+        this._data = options.data;
+        this._template = document.querySelector(options.el);
+
+        this.mount();
+      }
+      JGVue.prototype.mount = function () {
+        // 提供一个 render 方法生成 虚拟 DOM
+        this.render = this.createRenderFn();
+
+        this.mountComponent();
+      };
+      JGVue.prototype.mountComponent = function () {
+        let mount = () => {
+          this.update(this.render());
+        };
+        mount();
+      };
+      // 生成 render 函数，目的时缓存抽象语法树（使用虚拟 DOM 来模拟）
+      JGVue.prototype.createRenderFn = function () {
+        // 使用闭包 缓存 ast 抽象语法树
+        let ast = getVNode(this._template);
+        return function render() {
+          return render(ast, this._data);
+        };
+      };
+
+      // 将 vnode 中的插值表达式替换成真实的数据
+      function render(vnode, data) {
+        let _type = vnode.type,
+          _data = vnode.data,
+          _value = vnode.value,
+          _tag = vnode.tag,
+          _children = vnode.children;
+
+        let _vnode = null;
+
+        if (_type === 3) {
+          // 文本节点
+          _value = _value.replace(reg, (_, g) => {
+            return getAttrPath(data, g.trim());
+          });
+          _vnode = new VNode(_tag, _data, _value, _type);
+          let reg = /\{\{(.+？)\}\}/;
+        } else if (_type === 1) {
+          // 元素节点
+          _vnode = new VNode(_tag, _data, _value, _type);
+
+          _children.forEach((item) => {
+            _vnode.appendChild(render(item, data));
+          });
+        }
+      }
+
+      // 获取 插值表达时中形如 xxx.yyy.zzz 的值
+      function getAttrPath(obj, str) {
+        const paths = str.split(".");
+        let res = obj;
+        let prop;
+        while ((prop = paths.shift())) {
+          res = res[prop];
+        }
+        return res;
+      }
+
+      // 将虚拟 DOM 渲染到页面中 diff 算法的使用
+      JGVue.prototype.update = function () {};
+
+      let app = new JGVue({
+        el: "#root",
+        data: {
+          name: "hui",
+          age: 22,
+        },
+      });
+    </script>
+  </body>
+</html>
